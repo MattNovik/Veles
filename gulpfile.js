@@ -5,12 +5,38 @@ var gulp = require('gulp'), // Подключаем Gulp
     imagemin = require('gulp-imagemin'), // Сжатие изображений
     concat = require("gulp-concat"), // Объединение файлов - конкатенация
     uglify = require("gulp-uglify"), // Минимизация javascript
-    rename = require("gulp-rename") // Переименование файлов
+    rename = require("gulp-rename"), // Переименование файлов
+    pug = require('gulp-pug'), // плагин Pug
+    htmlbeautify = require('gulp-html-beautify'), // форматирование html кода после pug     
     browserSync = require('browser-sync');// Создаю сервер на браузере
 
-    gulp.task("html", function() {
+gulp.task("html", function() {
     return gulp.src("src/*.html")
     .pipe(gulp.dest("dist"));
+});
+
+gulp.task('htmlbeautify', function() {
+    var options = {
+        indentSize: 4,
+        unformatted: [
+            // https://www.w3.org/TR/html5/dom.html#phrasing-content
+             'abbr', 'area', 'b', 'bdi', 'bdo', 'br', 'cite',
+            'code', 'data', 'datalist', 'del', 'dfn', 'em', 'embed', 'i', 'ins', 'kbd', 'keygen', 'map', 'mark', 'math', 'meter', 'noscript',
+            'object', 'output', 'progress', 'q', 'ruby', 's', 'samp', 'small',
+             'strong', 'sub', 'sup', 'template', 'time', 'u', 'var', 'wbr', 'text',
+            'acronym', 'address', 'big', 'dt', 'ins', 'strike', 'tt'
+        ]
+    };
+return gulp.src('src/pug/index.html')
+    .pipe(htmlbeautify(options))
+    .pipe(gulp.dest('src'))   
+});
+
+gulp.task('pug', function() {
+  return gulp.src("src/pug/pages/*.pug")
+      .pipe(pug())
+      .pipe(gulp.dest("src/pug"))
+      .pipe(browserSync.stream());
 });
 
 gulp.task('browserSync', function() {
@@ -65,6 +91,8 @@ gulp.task('watch', function() {
     gulp.watch("src/*.html", gulp.parallel('html'));
     gulp.watch("src/js/*.js", gulp.parallel('scripts'));
     gulp.watch("src/images/*.+(jpg|jpeg|png|gif|svg)", gulp.parallel('imgs'));
+    gulp.watch("src/pug/pages/*.pug", gulp.parallel('pug'));
+    gulp.watch("src/pug/*.html", gulp.parallel('htmlbeautify'));
 });
 
-gulp.task("default", gulp.parallel("html", "sass", "scripts", "imgs","browserSync", "watch"));
+gulp.task("default", gulp.parallel("pug", "htmlbeautify", "html", "sass", "scripts", "imgs","browserSync", "watch"));
